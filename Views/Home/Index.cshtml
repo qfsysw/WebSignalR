@@ -1,0 +1,53 @@
+﻿@{
+    ViewData["Title"] = "Hi Chat";
+}
+
+<div class="text-center">
+
+    <div id="chat-container">
+        <input type="text" id="userInput" placeholder="Your name" />
+        <input type="text" id="messageInput" placeholder="Type a message..." />
+        <button id="sendButton">Send</button>
+        <ul id="messagesList"></ul>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.12/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chathub")
+            .build();
+
+        connection.on("ReceiveMessage", function (user, message) {
+            const encodedUser = user.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            const encodedMessage = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            const li = document.createElement("li");
+            li.textContent = `${encodedUser}: ${encodedMessage}`;
+            document.getElementById("messagesList").appendChild(li);
+        });
+
+        connection.start().catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        document.getElementById("sendButton").addEventListener("click", function (event) {
+            const user = document.getElementById("userInput").value;
+            const message = document.getElementById("messageInput").value;
+
+
+            // connection.invoke("SendMessage", user, message).catch(function (err) {
+            //     return console.error(err.toString());
+            // });
+            var msgInfo = {
+                "user": user,
+                "message": message
+            }
+            //const msgInfo = reactive({ user: user, message: message });
+            connection.invoke("SendMessage", msgInfo).catch(function (err) {
+                return console.error(err.toString());
+            });
+            event.preventDefault();
+        });
+    </script>
+
+
+</div>
